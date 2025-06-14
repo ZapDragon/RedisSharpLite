@@ -8,42 +8,13 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace RedisSharp
+namespace RedisSharpLite
 {
-    internal class Class2
+    public class Class2
     {
         private static TcpClient tcpClient;
         private static NetworkStream networkStream;
-        private static bool debugPrint = false;
-
-        static void Main()
-        {
-            while (true)
-            {
-                Console.SetCursorPosition(0, Console.CursorTop);
-                Console.Write("redis > ");
-                string command = Console.ReadLine();
-                if (string.IsNullOrEmpty(command)) { continue; }
-
-                if (command == "$debug")
-                {
-                    debugPrint = !debugPrint;
-                    Console.WriteLine("Debug print is " + debugPrint);
-                    continue;
-                }
-                else if (command == "$clear")
-                {
-                    Console.Clear();
-                    continue;
-                }
-
-                string response = RedisExecute(command);
-                if (!debugPrint)
-                {
-                    Console.Write("\n" + response + "\n");
-                }
-            }
-        }
+        public static bool debugPrint = false;
 
         public static string Execute(string command)
         {
