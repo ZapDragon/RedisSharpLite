@@ -36,7 +36,9 @@ class MainClass
             string response = RSL.ExecuteOnce(command);
             if (!debugPrint)
             {
-                Console.Write("\n" + response + "\n");
+                if (Console.CursorLeft > 0) { Console.WriteLine(); }
+                Console.Write(response);
+                if (Console.CursorLeft > 0) { Console.WriteLine(); }
             }
         }
     }

@@ -165,6 +165,11 @@ namespace RedisSharpLite
                         {
                             header = header.Substring(1);
                             int expectedbytes = Convert.ToInt32(header);
+                            if (expectedbytes < 0)
+                            {
+                                return "(null)";
+                            }
+
                             int readBytes = 0;
                             char[] buff = new char[expectedbytes];
 
