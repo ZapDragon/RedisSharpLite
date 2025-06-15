@@ -83,6 +83,11 @@ namespace RedisSharpLite
                         {
                             return header;
                         }
+                        // This is a response to an edit of a key/hash/ect. We can return the whole header here.
+                        else if (header.StartsWith(":"))
+                        {
+                            return header;
+                        }
                         // The + character indicates a server status reply to a command like "select"
                         else if (header.StartsWith("+"))
                         {
