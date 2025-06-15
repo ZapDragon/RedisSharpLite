@@ -8,12 +8,20 @@ class MainClass
     static private bool debugPrint = false;
     static void Main()
     {
-        RSL.setEndPoint(new IPEndPoint(IPAddress.Parse("172.24.0.7"), 6379));
+        string ip = "172.24.0.7";
+        int port = 6379;
+        string database = "0";
+        IPEndPoint ep = new IPEndPoint(IPAddress.Parse(ip), port);
+        RSL.setEndPoint(ep);
 
         while (true)
         {
+            string head = $"Redis# [{ip}:{port}] [{database}]> ";
             Console.SetCursorPosition(0, Console.CursorTop);
-            Console.Write("redis > ");
+
+            Console.Write(head);
+            Console.Title = head;
+
             string? command = Console.ReadLine();
             if (string.IsNullOrEmpty(command)) { continue; }
 
@@ -30,7 +38,8 @@ class MainClass
             }
             else if (command.StartsWith("select"))
             {
-                RSL.setDatabase(command.Split(' ')[1]);
+                database = command.Split(' ')[1];
+                RSL.setDatabase(database);
             }
 
             string response = RSL.ExecuteOnce(command);

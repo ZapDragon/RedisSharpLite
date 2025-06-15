@@ -84,7 +84,7 @@ namespace RedisSharpLite
                 tcpClient.NoDelay = true;
                 tcpClient.ReceiveBufferSize = 10240;
                 tcpClient.SendBufferSize = 10240;
-                tcpClient.Connect("172.24.0.7", 6379);
+                tcpClient.Connect(redisServerEP);
                 //tcpClient.Client.Blocking = false;
                 networkStream = tcpClient.GetStream();
 
@@ -109,6 +109,21 @@ namespace RedisSharpLite
                 }
 
                 writer.WriteLine(command);
+
+                if (command.ToUpper() == "MONITOR")
+                {
+                    Console.WriteLine(@"+Break with 'X'");
+                    while (true)
+                    {
+                        if (Console.KeyAvailable)
+                        {
+                            ConsoleKeyInfo key = Console.ReadKey(true);
+                            if (key.Key == ConsoleKey.X) { return "+Break"; }
+                        }
+                        if (tcpClient.Available > 0) { Console.WriteLine(reader.ReadLine()); }
+                        Thread.Sleep(1);
+                    }
+                }
 
                 bool gotData = false;
                 bool gotAllRows = false;
