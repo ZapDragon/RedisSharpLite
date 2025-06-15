@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
@@ -10,16 +11,68 @@ using System.Threading.Tasks;
 
 namespace RedisSharpLite
 {
-    public class Class2
+    public class RSL
     {
         private static TcpClient tcpClient;
         private static NetworkStream networkStream;
-        public static bool debugPrint = false;
+        private static IPEndPoint redisServerEP = null;
+        private static bool debugPrint = false;
+        private static int dbslot = 0;
 
-        public static string Execute(string command)
+        /// <summary>
+        /// Performs a single execution of a command, returns the results and disconnects.
+        /// </summary>
+        /// <param name="command">Any redis command as a string.</param>
+        /// <returns>A string containing the server's response.</returns>
+        public static string ExecuteOnce(string command)
         {
+            if (redisServerEP == null) { return "- ERR: Set server endPoint with setEndpoint() first."; }
+            
             return RedisExecute(command);
         }
+
+        /// <summary>
+        /// Sets the IP & Port endpoint for the client to connect to.
+        /// Has no default, and must be set before first use.
+        /// </summary>
+        /// <param name="ep">Create a new System.Net.IPEndpoint object with the target IP address and port for RSL to connect to.</param>
+        public static void setEndPoint(IPEndPoint ep)
+        {
+            redisServerEP = ep;
+        }
+
+        /// <summary>
+        /// Toggles debug print. When set to true, responses will be the raw packets from the Redis server.
+        /// </summary>
+        /// <returns>The new status of debugPrint.</returns>
+        public static bool toggleDebug()
+        {
+            debugPrint = !debugPrint;
+            return debugPrint;
+        }
+
+        /// <summary>
+        /// Set the target database slot. Typically 0-15, but can be higher if the Redis server has more slots configured.
+        /// </summary>
+        /// <param name="db">The target database slot. Be sure your redis server supports the ID slot number you want. By default redis has 16 slots, but can be configured for more.</param>
+        /// <returns>Returns the selected database.</returns>
+        public static int setDatabase(int db)
+        {
+            dbslot = db;
+            return dbslot;
+        }
+
+        /// <summary>
+        /// Set the target database slot. Typically 0-15, but can be higher if the Redis server has more slots configured.
+        /// </summary>
+        /// <param name="db">The target database slot. Be sure your redis server supports the ID slot number you want. By default redis has 16 slots, but can be configured for more.</param>
+        /// <returns>Returns the selected database.</returns>
+        public static int setDatabase(string db)
+        {
+            dbslot = Convert.ToInt32(db);
+            return dbslot;
+        }
+
 
         private static string RedisExecute(string command)
         {
@@ -41,6 +94,19 @@ namespace RedisSharpLite
 
                 // Sets auto-flush so we dont have to send our commands after writing to the socket every time.
                 writer.AutoFlush = true;
+
+                if (dbslot != 0)
+                {
+                    writer.WriteLine("select " + dbslot);
+                    bool reply = false;
+                    string line = "";
+                    while (string.IsNullOrEmpty(line))
+                    {
+                        line = reader.ReadLine();
+                    }
+                    
+                    if (!line.StartsWith("+")) { return "- Error Changing Database:\nRedis Error: " + line; }
+                }
 
                 writer.WriteLine(command);
 
@@ -117,34 +183,34 @@ namespace RedisSharpLite
 
                         // While expected rows is not the number of rows we have.
                         while (expectedRows > returnedRows)
+                        {
+                            // If we spin in here for too long, Break out. Something is wrong.
+                            if (sw.Elapsed.TotalSeconds > 5)
                             {
-                                // If we spin in here for too long, Break out. Something is wrong.
-                                if (sw.Elapsed.TotalSeconds > 5)
-                                {
-                                    sw.Stop();
-                                    break;
-                                }
-
-                                // Get the next line.
-                                string line = reader.ReadLine();
-                                if (debugPrint) { Console.WriteLine(line); }
-
-                                // If we're at the end, we need to wait for more data to come in.
-                                if (string.IsNullOrEmpty(line)) { continue; }
-
-                                // Lines that start with $ are byte lengths of the next line. Since these are \r\n terminated, we dont need this info.
-                                // Also, this is valid data, restart our counter.
-                                if (line.StartsWith("$")) { sw.Restart(); continue; }
-
-                                // Increase our row counter.
-                                returnedRows++;
-
-                                // We got data, reset the counter.
-                                sw.Restart();
-
-                                // We have our next row.
-                                sb.AppendLine(line);
+                                sw.Stop();
+                                break;
                             }
+
+                            // Get the next line.
+                            string line = reader.ReadLine();
+                            if (debugPrint) { Console.WriteLine(line); }
+
+                            // If we're at the end, we need to wait for more data to come in.
+                            if (string.IsNullOrEmpty(line)) { continue; }
+
+                            // Lines that start with $ are byte lengths of the next line. Since these are \r\n terminated, we dont need this info.
+                            // Also, this is valid data, restart our counter.
+                            if (line.StartsWith("$")) { sw.Restart(); continue; }
+
+                            // Increase our row counter.
+                            returnedRows++;
+
+                            // We got data, reset the counter.
+                            sw.Restart();
+
+                            // We have our next row.
+                            sb.AppendLine(line);
+                        }
 
                         // If we have the expected number of rows, our read was successful. Set our flag, and break out of this loop.
                         if (returnedRows == expectedRows)
