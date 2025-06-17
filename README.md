@@ -16,3 +16,9 @@ Others may be added as long as the original is kept intact.
 
 # TO DO:
 - YES
+- Better Redis Error/Response handling
+- ref/out Instead of returns? Use returns to indicate count/success?
+- Persistent socket class
+- Redis Auth
+- TLS Support
+- PowerShell cmdlet
