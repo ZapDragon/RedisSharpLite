@@ -24,3 +24,4 @@ Others may be added as long as the original is kept intact.
 - Redis Auth
 - TLS Support
 - PowerShell cmdlet
+- More descriptive readme + documentation
