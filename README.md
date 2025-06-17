@@ -19,6 +19,8 @@ Others may be added as long as the original is kept intact.
 - Better Redis Error/Response handling
 - ref/out Instead of returns? Use returns to indicate count/success?
 - Persistent socket class
+- Persistent socket thread?
+- Async? (If I can ever figure that stuff out)
 - Redis Auth
 - TLS Support
 - PowerShell cmdlet
