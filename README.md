@@ -13,3 +13,6 @@ A lot of cleaning, commenting, refactoring and fixing is on-going.
 We're open to issues, and/or pull requests if you want to contribute.
 If you do wish to make a pull request, we ask that you keep the "string" return type intact, as that is the goal of this library.
 Others may be added as long as the original is kept intact.
+
+# TO DO:
+- YES
